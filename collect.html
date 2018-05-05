@@ -1,0 +1,39 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>collector</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.sound.min.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <button id="btn">123</button>
+
+    <script type="text/javascript">
+    var mic = new p5.AudioIn();
+    mic.start();
+    fft = new p5.FFT();
+    fft.setInput(mic);
+    
+    $('#btn').click(function(){
+        var spectrum = fft.analyze();
+        console.log(spectrum);
+        for (var i = 0; i < spectrum.length; i++) {
+            if(spectrum[i] != 0){
+                console.log(i);
+                console.log(spectrum[i]);
+            }
+        }
+    });
+    </script>
+</body>
+</html>
