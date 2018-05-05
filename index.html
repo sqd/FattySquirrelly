@@ -7,11 +7,12 @@
 
 
     <script src="tracking.js/tracking-min.js"></script>
-
+    <title>FATTY SQUIRRELLY</title>
 </head>
 <body>
     <video id="video" width="320" height="240" style="position: absolute;right: 0px;bottom: 0px;" preload autoplay loop muted></video>
-    <b>Put a purple/pink color patch in front of your camera to start the game.</b>
+    <p><b>Put a purple/pink color patch in front of your camera to start the game.</b></p>
+    <p>Shout to make the squirrel jump, use the purple color to change lane.</p>
 
     <script>
     var sqPos = 'middle', sqDes = undefined;
@@ -140,7 +141,7 @@
         
         walkAnim.play(6, true);
 
-        game.time.events.loop(Phaser.Timer.SECOND/3, addObstacles, this);
+        game.time.events.loop(Phaser.Timer.SECOND*0.4, addObstacles, this);
     }
 
     function update() {
@@ -253,7 +254,7 @@
 
     var obstacles = [[], [], []];
     function addObstacles(){
-        if(Math.random()>0.3){
+        if(Math.random()>0.5){
             var i = game.rnd.integerInRange(0, 2);
             var o = game.rnd.pick(obstacleImages);
             var m = {
