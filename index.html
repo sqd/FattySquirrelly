@@ -11,6 +11,7 @@
 </head>
 <body>
     <video id="video" width="320" height="240" style="position: absolute;right: 0px;bottom: 0px;" preload autoplay loop muted></video>
+    <b>Put a purple/pink color patch in front of your camera to start the game.</b>
 
     <script>
     var sqPos = 'middle', sqDes = undefined;
@@ -22,11 +23,15 @@
     var colorTracker = undefined;
     var flowers = undefined;
     var obstacleImages = ['boulder', 'pond', 'stone'];
+    var se = {};
 
     colorTracker = new tracking.ColorTracker('magenta');
     tracking.track('#video', colorTracker, { camera: true });
     colorTracker.on('track', function(event) {
         if(event.data.length > 0){
+            if(mic.enabled && game == undefined)
+                game = new Phaser.Game(1024, 768, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
             var x = event.data[0].x;
             var newState = 'right'
             if(x > 60) newState = 'middle';
@@ -37,14 +42,13 @@
                     sqStatus = 'toChangeLane';
                 }
             }
-
         }
     });
 
     var mic = new p5.AudioIn();
     mic.start();
 
-    var game = new Phaser.Game(1024, 768, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var game = undefined;
 
 
     //var path1left = new Phaser.Line(400, 130, 300, 230);
@@ -65,11 +69,25 @@
         game.load.image('texture1', 'assets/ground/texture1.png');
         game.load.image('texture2', 'assets/ground/texture2.png');
 
+        game.load.audio('bgm', 'assets/bgm.mp3');
+        game.load.audio('jump', 'assets/jump.mp3');
+        game.load.audio('running', 'assets/running.mp3');
+
         game.time.advancedTiming = true;
     }
 
     function create() {
         game.add.image(0, 0, 'bg');
+
+        se.bgm = game.add.audio('bgm');
+        se.bgm.loopFull();
+
+        se.die = new Audio('assets/die.mp3');
+        se.jump = game.add.audio('jump');
+        se.running = game.add.audio('running');
+
+        se.bgm.play();
+        se.running.loopFull();
 
         flowers = [[game.add.image(220, 0, 'flower'), game.add.image(120, 300, 'flower')], [
         game.add.image(720, 160, 'flower'), game.add.image(840, 400, 'flower')]];
@@ -116,6 +134,7 @@
             sqStatus = 'running';
             sq.scale.setTo(1, 1);
             sq.x -= 50;
+            se.running.mute = false;
             walkAnim.play(6, true);
         });
         
@@ -130,7 +149,9 @@
         //console.log(micLevel)
         if(micLevel > 0.15 && sqStatus == 'running'){
             sqStatus = 'jumping';
+            se.running.mute = true;
             sq.animations.stop();
+            se.jump.play();
             sq.x += 50;
             sq.scale.setTo(0.7, 0.7);
             jumpAnim.play(12, false);
@@ -227,6 +248,7 @@
         console.log('die');
         game.add.image(0, 0, 'die');
         game.paused = true;
+        se.die.play();
     }
 
     var obstacles = [[], [], []];
