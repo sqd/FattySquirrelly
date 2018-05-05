@@ -16,9 +16,13 @@
     var sqPos = 'middle', sqDes = undefined;
     var sqStatus = 'running';
     var sq = undefined;
-    var walkAnim = undefined, changeLeftAnim = undefined, changeRightAnim = undefined;
+    var obstacles = [];
+    var walkAnim = undefined, changeLeftAnim = undefined, changeRightAnim = undefined, jumpAnim = undefined;
     var debugText = undefined;
     var colorTracker = undefined;
+    var flowers = undefined;
+    var obstacleImages = ['boulder', 'pond', 'stone'];
+
     colorTracker = new tracking.ColorTracker('magenta');
     tracking.track('#video', colorTracker, { camera: true });
     colorTracker.on('track', function(event) {
@@ -28,7 +32,7 @@
             if(x > 60) newState = 'middle';
             if(x > 130) newState = 'left';
             if(newState != sqPos){
-                if(sqStatus != 'toChangeLane' && sqStatus != 'changingLane'){
+                if(sqStatus == 'running'){
                     sqDes = newState;
                     sqStatus = 'toChangeLane';
                 }
@@ -42,19 +46,38 @@
 
     var game = new Phaser.Game(1024, 768, Phaser.AUTO, '', { preload: preload, create: create, update: update });
 
+
+    //var path1left = new Phaser.Line(400, 130, 300, 230);
+    //game.debug.geom(path1left)
+
     function preload() {
-        game.load.image('background', 'assets/background.jpg');
+        
+        //game.load.image('background', 'assets/background.jpg');
         game.load.spritesheet('sprite', 'assets/squirrel/sprite.png', 400, 300, 10);
+        game.load.image('bg', 'assets/background.jpg');
+        game.load.image('flower', 'assets/flower.png');
 
+        game.load.image('boulder', 'assets/boulder.png');
+        game.load.image('pond', 'assets/pond.png');
+        game.load.image('stone', 'assets/stone.png');
 
+        game.load.image('texture1', 'assets/ground/texture1.png');
+        game.load.image('texture2', 'assets/ground/texture2.png');
+
+        game.time.advancedTiming = true;
     }
 
     function create() {
-        game.add.sprite(0, 0, 'background');
+        game.add.image(0, 0, 'bg');
+
+        flowers = [[game.add.image(220, 0, 'flower'), game.add.image(120, 300, 'flower')], [
+        game.add.image(720, 160, 'flower'), game.add.image(840, 400, 'flower')]];
+
         sq = game.add.sprite(335, 400, 'sprite');
         walkAnim = sq.animations.add('walk', [4,2,0,2,4,5,3,1,3,5], true);
         changeLeftAnim = sq.animations.add('jump_left', [2,0,9,7,0,2,4], false);
         changeRightAnim = sq.animations.add('jump_right', [3,1,8,6,1,3,5], false);
+        jumpAnim = sq.animations.add('jump', [5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4], false);
 
         debugText = game.add.text(0, 0, "debug text");
         
@@ -88,22 +111,31 @@
             }
             console.log('change completed')
         }, this);
+        jumpAnim.onComplete.add(function(){
+            sqStatus = 'running';
+            sq.scale.setTo(1, 1);
+            sq.x -= 50;
+            walkAnim.play(6, true);
+        });
         
         walkAnim.play(6, true);
 
-        //game.time.events.loop(Phaser.Timer.SECOND, undefined, this);
+        game.time.events.loop(Phaser.Timer.SECOND, addObstacles, this);
     }
 
     function update() {
-        /*
+        
         var micLevel = mic.getLevel();
+        //console.log(micLevel)
         if(micLevel > 0.15 && sqStatus == 'running'){
             sqStatus = 'jumping';
-            //TODO: anim
-            //anim.onComplete
+            sq.animations.stop();
+            sq.x += 50;
+            sq.scale.setTo(0.7, 0.7);
+            jumpAnim.play(12, false);
         }
-        */
-        debugText.setText(sqStatus + ' ' + sqPos);
+        
+        debugText.setText(sqStatus + ' ' + sqPos + ' ' + micLevel.toFixed(2) + ' ' + game.time.fps);
         //console.log(1);
         if(sqStatus == 'toChangeLane'){
             sqStatus = 'changingLane';
@@ -124,6 +156,50 @@
                 changeLeftAnim.play(6, false);
                 sq.x -= 125;
             }
+        }
+
+        moveGround();
+
+
+    }
+
+/*
+        flowers = [[game.add.image(220, 0, 'flower'), game.add.image(120, 300, 'flower')], [
+        game.add.image(720, 160, 'flower'), game.add.image(840, 400, 'flower')]];
+
+*/
+
+    function moveGround(){
+        var speedl = 1.0, speedr = 1.1;
+        for(let f of flowers[0]){
+            f.x -= 1 * speedl;
+            f.y += 2.2 * speedl;
+            if(f.y >= 500){
+                f.x = 220;
+                f.y = 0;
+            }
+        }
+        for(let f of flowers[1]){
+            f.x += 1 * speedr;
+            f.y += 1.8 * speedr;
+            if(f.y >= 500){
+                f.x = 620;
+                f.y = 0;
+            }
+        }
+    }
+
+    var obstacles = [[], [], []];
+    function addObstacles(){
+        if(Math.random()>0.7){
+            var i = game.rnd.integerInRange(0, 2);
+            var o = game.rnd.pick(obstacleImages);
+            var m = {
+                0 : [200, 0, o],
+                1 : [400, 0, o],
+                2 : [600, 0, o]
+            };
+            obstacles[i].push(game.add.image(...m[i]));
         }
     }
 
