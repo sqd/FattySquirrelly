@@ -1,0 +1,1 @@
+Configure an HTTP server to serve the directory, with index.html be the default page.
