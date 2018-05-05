@@ -56,6 +56,7 @@
         game.load.spritesheet('sprite', 'assets/squirrel/sprite.png', 400, 300, 10);
         game.load.image('bg', 'assets/background.jpg');
         game.load.image('flower', 'assets/flower.png');
+        game.load.image('die', 'assets/die.jpg');
 
         game.load.image('boulder', 'assets/boulder.png');
         game.load.image('pond', 'assets/pond.png');
@@ -77,7 +78,7 @@
         walkAnim = sq.animations.add('walk', [4,2,0,2,4,5,3,1,3,5], true);
         changeLeftAnim = sq.animations.add('jump_left', [2,0,9,7,0,2,4], false);
         changeRightAnim = sq.animations.add('jump_right', [3,1,8,6,1,3,5], false);
-        jumpAnim = sq.animations.add('jump', [5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4], false);
+        jumpAnim = sq.animations.add('jump', [5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4,5], false);
 
         debugText = game.add.text(0, 0, "debug text");
         
@@ -120,11 +121,11 @@
         
         walkAnim.play(6, true);
 
-        game.time.events.loop(Phaser.Timer.SECOND, addObstacles, this);
+        game.time.events.loop(Phaser.Timer.SECOND/3, addObstacles, this);
     }
 
     function update() {
-        
+        game.world.bringToTop(sq);
         var micLevel = mic.getLevel();
         //console.log(micLevel)
         if(micLevel > 0.15 && sqStatus == 'running'){
@@ -149,11 +150,11 @@
                 'right' : 2
             };
             if(m[sqDes] - m[sqPos] > 0){
-                changeRightAnim.play(6, false);
+                changeRightAnim.play(10, false);
                 sq.x += 125;
             }
             else{
-                changeLeftAnim.play(6, false);
+                changeLeftAnim.play(10, false);
                 sq.x -= 125;
             }
         }
@@ -187,19 +188,61 @@
                 f.y = 0;
             }
         }
+
+        var speed1 = 1.0, speed2 = 1.0, speed3 = 1.0;
+        for(let o of obstacles[0]){
+            o.x -= 0.35 * speed1;
+            o.y += 2 * speed1;
+            if(o.y > 500 && o.y < 510){
+                if(sqStatus == 'running' && sqPos == 'left')
+                    die();
+            }
+        }
+        for(let o of obstacles[1]){
+            o.y += 2 * speed2;
+            if(o.y > 500&& o.y < 510){
+                if(sqStatus == 'running' && sqPos == 'middle')
+                    die();
+            }
+        }
+        for(let o of obstacles[2]){
+            o.x += 0.7 * speed3;
+            o.y += 2 * speed3;
+            if(o.y > 500&& o.y < 510){
+                if(sqStatus == 'running' && sqPos == 'right')
+                    die();
+            }
+        }
+        for(let l of obstacles)
+            for(let o of l)
+                if(o.y > 600)
+                    o.destroy();
+
+        obstacles[0] = obstacles[0].filter(o => o.y <= 600);
+        obstacles[1] = obstacles[1].filter(o => o.y <= 600);
+        obstacles[2] = obstacles[2].filter(o => o.y <= 600);
+    }
+
+    function die(){
+        console.log('die');
+        game.add.image(0, 0, 'die');
+        game.paused = true;
     }
 
     var obstacles = [[], [], []];
     function addObstacles(){
-        if(Math.random()>0.7){
+        if(Math.random()>0.3){
             var i = game.rnd.integerInRange(0, 2);
             var o = game.rnd.pick(obstacleImages);
             var m = {
-                0 : [200, 0, o],
-                1 : [400, 0, o],
-                2 : [600, 0, o]
+                0 : [350, 0, o],
+                1 : [470, 0, o],
+                2 : [530, 0, o]
             };
-            obstacles[i].push(game.add.image(...m[i]));
+            var img = game.add.image(...m[i]);
+            img.scale.setTo(0.5, 0.5);
+            obstacles[i].push(img);
+
         }
     }
 
